@@ -2,6 +2,7 @@ import mqtt, { type MqttClient, type IClientOptions } from "mqtt";
 import { logger } from "./logger.js";
 import { config } from "./config.js";
 import type { MqttIntegration } from "./types.js";
+import { MessageProcessor } from "./message-processor.js";
 
 interface ConnectionState {
   client?: MqttClient;
@@ -21,16 +22,10 @@ const USER_CONNECT_OPTIONS_ALLOWED_KEYS = [
 
 export class MqttClientManager {
   private connections: Map<string, ConnectionState> = new Map();
-  private messageHandler: (
-    deviceId: string,
-    topic: string,
-    message: Buffer
-  ) => void;
+  private messageProcessor: MessageProcessor;
 
-  constructor(
-    messageHandler: (deviceId: string, topic: string, message: Buffer) => void
-  ) {
-    this.messageHandler = messageHandler;
+  constructor(messageProcessor: MessageProcessor) {
+    this.messageProcessor = messageProcessor;
   }
 
   /**
@@ -128,14 +123,14 @@ export class MqttClientManager {
 
           // Setup message handler
           client.on("message", (topic, message) => {
-            this.messageHandler(deviceId, topic, message);
+            this.messageProcessor.processMessage(integration, topic, message);
           });
 
           // Handle unexpected disconnection
           client.on("close", () => {
             logger.warn(`Connection closed for device ${deviceId}`);
             this.connections.delete(deviceId);
-            // TODO: maybe reconnect here
+            // TODO: Schedule reconnection attempt
           });
 
           resolve(client);

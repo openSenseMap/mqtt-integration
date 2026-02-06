@@ -1,12 +1,28 @@
+import { mqttIntegration } from "./schema";
+
 export interface MqttIntegration {
   deviceId: string;
-  integrationId: string;
   enabled: boolean; 
   url: string;
   topic: string;
   messageFormat: "json" | "csv" | "application/json";
   decodeOptions?: any;
   connectionOptions?: Record<string, any>;
+}
+
+export type MqttIntegrationDb = typeof mqttIntegration.$inferSelect;
+export type MqttIntegrationInsert = typeof mqttIntegration.$inferInsert;
+
+export function toMqttIntegration(db: MqttIntegrationDb): MqttIntegration {
+  return {
+    deviceId: db.deviceId,
+    enabled: db.enabled,
+    url: db.url,
+    topic: db.topic,
+    messageFormat: db.messageFormat as 'json' | 'csv',
+    decodeOptions: db.decodeOptions ?? undefined, 
+    connectionOptions: db.connectionOptions ?? undefined, 
+  };
 }
 
 export interface DecodedMeasurement {
