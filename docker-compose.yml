@@ -1,0 +1,20 @@
+services:
+  mqtt-db:
+    image: postgres:18-alpine
+    container_name: mqtt-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mqtt_service
+    ports:
+      - "5433:5432"
+    volumes:
+      - mqtt-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mqtt-db-data:
