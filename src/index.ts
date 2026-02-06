@@ -4,16 +4,16 @@ import { ApiClient } from "./api-client.js";
 import { MqttClientManager } from "./mqtt-client.js";
 import { MessageProcessor } from "./message-processor.js";
 import { createHttpServer, requireServiceKey } from "./http-server.js";
+import { integrationsRepository } from "./integration.server.js";
 
 async function main() {
   const apiClient = new ApiClient();
   const messageProcessor = new MessageProcessor(apiClient);
+  const mqttManager = new MqttClientManager(messageProcessor);
 
-  const mqttManager = new MqttClientManager((deviceId, topic, message) => {
-    messageProcessor.processMessage(deviceId, topic, message);
-  });
+  await syncIntegrations(mqttManager);
 
-  const app = createHttpServer(mqttManager, messageProcessor, apiClient, syncIntegrations);
+  const app = createHttpServer(mqttManager, messageProcessor, apiClient);
   app.use(requireServiceKey);
 
   const server = app.listen(config.PORT, () => {
@@ -21,75 +21,13 @@ async function main() {
   });
 
   /**
-   * Sync integrations from API and connect/disconnect devices
-   */
-  async function syncIntegrations() {
-    try {
-
-      const integrations = await apiClient.fetchActiveIntegrations();
-
-
-      const desired = new Map(
-        integrations
-          .filter(i => i.enabled)
-          .map(i => [i.deviceId, i])
-      );
-
-
-      const connected = mqttManager.getConnectedDeviceIds();
-       // Disconnect devices that should not be connected anymore
-      for (const deviceId of connected) {
-        if (!desired.has(deviceId)) {
-          logger.info(`Disconnecting ${deviceId} (no longer enabled)`);
-          await mqttManager.disconnect(deviceId);
-        }
-      }
-
-      // Connect or reconnect desired devices
-    for (const [deviceId, integration] of desired) {
-      const current = mqttManager.getIntegration(deviceId);
-
-      const configChanged =
-        !current ||
-        current.url !== integration.url ||
-        current.topic !== integration.topic ||
-        JSON.stringify(current.connectionOptions) !==
-          JSON.stringify(integration.connectionOptions);
-
-      if (!mqttManager.isConnected(deviceId) || configChanged) {
-        messageProcessor.setDeviceFormat(
-          integration.deviceId,
-          integration.messageFormat,
-          integration.decodeOptions
-        );
-
-        logger.info(`Ensuring MQTT connection for ${deviceId}`);
-        await mqttManager.connect(integration);
-      }
-      }
-    } catch (err) {
-      logger.error("Error syncing integrations", { error: err });
-    }
-  }
-
-  await syncIntegrations();
-
-  const pollInterval = setInterval(
-    syncIntegrations,
-    config.CONFIG_POLL_INTERVAL_MS
-  );
-
-  /**
    * Graceful shutdown handler
    */
   const closeGracefully = async (signal: string) => {
     logger.info(`⚠️ Received ${signal}, shutting down gracefully...`);
 
-    // Stop polling
-    clearInterval(pollInterval);
-
     // Flush pending measurements
-    await messageProcessor.flushAll();
+    // await messageProcessor.flushAll();
 
     await mqttManager.disconnectAll();
 
@@ -102,6 +40,41 @@ async function main() {
   process.on("SIGTERM", () => closeGracefully("SIGTERM"));
 
   logger.info("✅ MQTT Service started successfully");
+}
+
+/**
+ * Load all enabled integrations from database and connect to their MQTT brokers
+ */
+async function syncIntegrations(mqttManager: MqttClientManager) {
+  logger.info('🔄 Syncing integrations from database...');
+  
+  try {
+    const integrations = await integrationsRepository.findAllEnabled();
+    logger.info(`📋 Found ${integrations.length} enabled integrations`);
+    
+    for (const integration of integrations) {
+      logger.info(`Connecting to MQTT for device ${integration.deviceId}`, {
+        url: integration.url,
+        topic: integration.topic
+      });
+      
+      if (!mqttManager.isConnected(integration.deviceId)) {
+        try {
+          await mqttManager.connect(integration);
+          logger.info(`✅ Connected to MQTT for device ${integration.deviceId}`);
+        } catch (error) {
+          logger.error(`❌ Failed to connect device ${integration.deviceId}`, { error });
+        }
+      } else {
+        logger.info(`⏭️ Device ${integration.deviceId} already connected`);
+      }
+    }
+    
+    logger.info(`✅ Sync complete: ${mqttManager.getConnectionCount()} active connections`);
+  } catch (error) {
+    logger.error('❌ Failed to sync integrations', { error });
+    throw error;
+  }
 }
 
 main().catch((err) => {

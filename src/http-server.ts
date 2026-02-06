@@ -50,6 +50,8 @@ function validateIntegrationRequest(body: any): { valid: boolean; errors?: strin
 
 export function createHttpServer(
   mqttManager: MqttClientManager,
+  messageProcessor: MessageProcessor,
+  apiClient: ApiClient
 ) {
   const app = express();
   app.use(express.json());
