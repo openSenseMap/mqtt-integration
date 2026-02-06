@@ -29,70 +29,74 @@ export class ApiClient {
     return response;
   }
 
-  async fetchIntegration(deviceId: string): Promise<MqttIntegration> {
-    try {
+async sendMeasurements(batch: MeasurementBatch): Promise<void> {
+  try {
+    logger.info(`🚀 Sending ${batch.measurements.length} measurements`);
 
-      const response = await this.fetch(`/api/integrations/${deviceId}/mqtt`);
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch integration for device ${deviceId}: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const integration = (await response.json()) as MqttIntegration;
-
-      return integration;
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  async fetchActiveIntegrations(): Promise<MqttIntegration[]> {
-    try {
-
-      const response = await this.fetch("/api/integrations/mqtt/active");
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch integrations: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const integrations = (await response.json()) as MqttIntegration[];
-
-      return integrations;
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  async sendMeasurements(batch: MeasurementBatch): Promise<void> {
-    try {
-      logger.debug(
-        `Sending ${batch.measurements.length} measurements for device ${batch.deviceId}`
+    for (const m of batch.measurements) {
+      const response = await this.fetch(
+        `/api/boxes/${batch.deviceId}/${m.sensor_id}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            value: m.value,
+            createdAt: m.createdAt,
+            location: m.location || undefined
+          }),
+        }
       );
 
-      const response = await this.fetch("/api/measurements/ingest", {
-        method: "POST",
-        body: JSON.stringify(batch),
-      });
-
       if (!response.ok) {
-        throw new Error(
-          `Failed to send measurements: ${response.status} ${response.statusText}`
-        );
+        const errorText = await response.text();
+        throw new Error(`Failed: ${response.status} ${errorText}`);
       }
-
-      logger.info(
-        `✅ Sent ${batch.measurements.length} measurements for device ${batch.deviceId}`
-      );
-    } catch (err) {
-      logger.error(`Failed to send measurements for device ${batch.deviceId}`, {
-        error: err,
-        batchSize: batch.measurements.length,
-      });
-      throw err;
     }
+
+    logger.info(`✅ Sent ${batch.measurements.length} measurements`);
+  } catch (err) {
+    logger.error(`Failed to send measurements`, {
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
   }
+}
+
+  // async sendMeasurements(batch: MeasurementBatch): Promise<void> {
+  //   try {
+  //     logger.debug(
+  //       `Sending ${batch.measurements.length} measurements for device ${batch.deviceId}`
+  //     );
+
+  //     const response = await this.fetch(
+  //       `/api/boxes/${batch.deviceId}/data`,
+  //       {
+  //         method: "POST",
+  //         body: JSON.stringify(batch.measurements),
+  //       }
+  //     );
+
+
+  //     if (!response.ok) {
+  //       throw new Error(
+  //         `Failed to send measurements: ${response.status} ${response.statusText}`
+  //       );
+  //     }
+
+  //     logger.info(
+  //       `✅ Sent ${batch.measurements.length} measurements for device ${batch.deviceId}`
+  //     );
+  //   } catch (err) {
+  //     logger.error(`Failed to send measurements for device ${batch.deviceId}`, {
+  //       error: err,
+  //       errorMessage: err instanceof Error ? err.message : String(err), // ADD THIS
+  //       errorStack: err instanceof Error ? err.stack : undefined, // ADD THIS
+  //       batchSize: batch.measurements.length,
+  //     });
+  //     // logger.error(`Failed to send measurements for device ${batch.deviceId}`, {
+  //     //   error: err,
+  //     //   batchSize: batch.measurements.length,
+  //     // });
+  //     throw err;
+  //   }
+  // }
 }
