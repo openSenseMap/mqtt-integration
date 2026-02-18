@@ -26,41 +26,51 @@ export const mqttIntegrationSchema = {
         enum: ["json", "csv"],
       },
       decodeOptions: {
-        type: "object",
-        title: "Decoding options",
-        properties: {
-          jsonPath: {
-            type: "string",
-            title: "JSON Path",
-            description: "Optional JSONPath expression (JSON only)",
+        oneOf: [
+          {
+            type: "object",
+            title: "Decoding options",
+            properties: {
+              jsonPath: {
+                type: "string",
+                title: "JSON Path",
+                description: "Optional JSONPath expression (JSON only)",
+              },
+              delimiter: {
+                type: "string",
+                title: "CSV delimiter",
+                default: ",",
+              },
+            },
+            additionalProperties: true,
           },
-          delimiter: {
-            type: "string",
-            title: "CSV delimiter",
-            default: ",",
-          },
-        },
-        additionalProperties: true,
+          { type: "null" }
+        ]
       },
       connectionOptions: {
-        type: "object",
-        title: "Connection options",
-        properties: {
-          username: { type: "string", title: "Username" },
-          password: {
-            type: "string",
-            title: "Password",
-            format: "password",
+        oneOf: [
+          {
+            type: "object",
+            title: "Connection options",
+            properties: {
+              username: { type: "string", title: "Username" },
+              password: {
+                type: "string",
+                title: "Password",
+                format: "password",
+              },
+              clientId: { type: "string", title: "Client ID" },
+              keepalive: {
+                type: "integer",
+                title: "Keepalive (seconds)",
+                minimum: 10,
+                maximum: 3600,
+              },
+            },
+            additionalProperties: false,
           },
-          clientId: { type: "string", title: "Client ID" },
-          keepalive: {
-            type: "integer",
-            title: "Keepalive (seconds)",
-            minimum: 10,
-            maximum: 3600,
-          },
-        },
-        additionalProperties: false,
+          { type: "null" }
+        ]
       },
     },
   },
