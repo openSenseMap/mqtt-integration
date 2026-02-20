@@ -21,10 +21,12 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
+COPY --from=builder /app/drizzle ./drizzle
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 mqttservice
 USER mqttservice
 
 EXPOSE 3001
 
-CMD ["node", "dist/index.js"]
+ENTRYPOINT ["./entrypoint.sh"]
