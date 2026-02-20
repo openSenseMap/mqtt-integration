@@ -1,10 +1,10 @@
-import { logger } from "./logger.js";
-import { config } from "./config.js";
-import { ApiClient } from "./api-client.js";
-import { MqttClientManager } from "./mqtt-client.js";
-import { MessageProcessor } from "./message-processor.js";
-import { createHttpServer, requireServiceKey } from "./http-server.js";
-import { integrationsRepository } from "./integration.server.js";
+import { logger } from "./logger";
+import { config } from "./config";
+import { ApiClient } from "./api-client";
+import { MqttClientManager } from "./mqtt-client";
+import { MessageProcessor } from "./message-processor";
+import { createHttpServer, requireServiceKey } from "./http-server";
+import { integrationsRepository } from "./integration.server";
 
 async function main() {
   const apiClient = new ApiClient();

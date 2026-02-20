@@ -1,8 +1,8 @@
 import mqtt, { type MqttClient, type IClientOptions } from "mqtt";
-import { logger } from "./logger.js";
-import { config } from "./config.js";
-import type { MqttIntegration } from "./types.js";
-import { MessageProcessor } from "./message-processor.js";
+import { logger } from "./logger";
+import { config } from "./config";
+import type { MqttIntegration } from "./types";
+import { MessageProcessor } from "./message-processor";
 
 interface ConnectionState {
   client?: MqttClient;

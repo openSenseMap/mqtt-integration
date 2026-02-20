@@ -1,7 +1,7 @@
-import { logger } from "./logger.js";
-import { ApiClient } from "./api-client.js";
-import { MessageDecoder, type MessageFormat } from "./decoders.js";
-import type { MqttIntegration } from "./types.js";
+import { logger } from "./logger";
+import { ApiClient } from "./api-client";
+import { MessageDecoder, type MessageFormat } from "./decoders";
+import type { MqttIntegration } from "./types";
 
 export class MessageProcessor {
   private apiClient: ApiClient;

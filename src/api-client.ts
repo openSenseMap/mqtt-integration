@@ -1,6 +1,6 @@
-import { config } from "./config.js";
-import { logger } from "./logger.js";
-import type { MqttIntegration, MeasurementBatch } from "./types.js";
+import { config } from "./config";
+import { logger } from "./logger";
+import type { MqttIntegration, MeasurementBatch } from "./types";
 
 export class ApiClient {
   private baseUrl: string;
