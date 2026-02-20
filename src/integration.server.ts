@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
-import { drizzleClient } from './db.server';
-import { mqttIntegration } from './schema';
-import { toMqttIntegration } from './types';
+import { drizzleClient } from './db.server.js';
+import { mqttIntegration } from './schema/index.js';
+import { toMqttIntegration } from './types.js';
 
 export const integrationsRepository = {
   async findByDeviceId(deviceId: string) {

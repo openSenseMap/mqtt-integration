@@ -1,11 +1,11 @@
 import express from 'express';
-import { logger } from './logger';
-import { MqttClientManager } from './mqtt-client';
-import { MessageProcessor } from './message-processor';
-import { ApiClient } from './api-client';
-import { config } from './config';
-import { integrationsRepository } from './integration.server';
-import { mqttIntegrationSchema } from './schema/mqtt-schema';
+import { logger } from './logger.js';
+import { MqttClientManager } from './mqtt-client.js';
+import { MessageProcessor } from './message-processor.js';
+import { ApiClient } from './api-client.js';
+import { config } from './config.js';
+import { integrationsRepository } from './integration.server.js';
+import { mqttIntegrationSchema } from './schema/mqtt-schema.js';
 
 interface IntegrationRequest {
   url: string;
