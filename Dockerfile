@@ -23,13 +23,13 @@ COPY --from=builder /app/package.json ./package.json
 
 COPY --from=builder /app/drizzle ./drizzle
 
+COPY ./entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 mqttservice
 USER mqttservice
 
 EXPOSE 3001
-
-COPY ./entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
