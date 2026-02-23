@@ -7,7 +7,7 @@ export const mqttIntegrationSchema = {
         type: "boolean",
         title: "Enable MQTT",
         default: true,
-        "ui:widget": "CheckboxWidget"
+        "ui:widget": "CheckboxWidget",
       },
       url: {
         type: "string",
@@ -24,24 +24,13 @@ export const mqttIntegrationSchema = {
         type: "string",
         title: "Message format",
         enum: ["json", "csv"],
+        default: "json",
       },
       decodeOptions: {
         type: "object",
         title: "Decoding options",
-        properties: {
-          jsonPath: {
-            type: "string",
-            title: "JSON Path",
-            description: "Optional JSONPath expression (JSON only)",
-          },
-          delimiter: {
-            type: "string",
-            title: "CSV delimiter",
-            default: ",",
-          },
-        },
-        additionalProperties: true,
       },
+
       connectionOptions: {
         type: "object",
         title: "Connection options",
@@ -59,7 +48,49 @@ export const mqttIntegrationSchema = {
         additionalProperties: false,
       },
     },
+
+    dependencies: {
+      messageFormat: {
+        oneOf: [
+          {
+            properties: {
+              messageFormat: { const: "json" },
+              decodeOptions: {
+                type: "object",
+                title: "Decoding options",
+                properties: {
+                  jsonPath: {
+                    type: "string",
+                    title: "JSON Path",
+                    description: "Optional JSONPath expression (JSON only)",
+                  },
+                },
+                additionalProperties: false,
+              },
+            },
+          },
+          {
+            properties: {
+              messageFormat: { const: "csv" },
+              decodeOptions: {
+                type: "object",
+                title: "Decoding options",
+                properties: {
+                  delimiter: {
+                    type: "string",
+                    title: "CSV delimiter",
+                    default: ",",
+                  },
+                },
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+      },
+    },
   },
+
   uiSchema: {
     "ui:order": [
       "enabled",
