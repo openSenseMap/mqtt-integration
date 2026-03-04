@@ -1,5 +1,5 @@
-import { logger } from "./logger.js";
-import type { DecodedMeasurement } from "./types.js";
+import { logger } from "./logger";
+import type { DecodedMeasurement } from "./types";
 
 export type MessageFormat = "json" | "csv" | "application/json";
 
