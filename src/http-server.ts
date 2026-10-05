@@ -6,6 +6,10 @@ import { ApiClient } from './api-client.js';
 import { config } from './config.js';
 import { integrationsRepository } from './integration.server.js';
 import { mqttIntegrationSchema } from './schema/mqtt-schema.js';
+import {
+  serviceMetadata,
+  setServiceMetadataHeaders,
+} from './service-metadata.js';
 
 interface IntegrationRequest {
   url: string;
@@ -62,6 +66,10 @@ export function createHttpServer(
       connections: mqttManager.getConnectionCount(),
       timestamp: new Date().toISOString()
     });
+  });
+
+  app.get('/meta', requireServiceKey, (_req, res) => {
+    res.json(serviceMetadata);
   });
 
   // GET integration config for device
@@ -201,5 +209,6 @@ export function requireServiceKey(req: any, res: any, next: any) {
   if (key !== config.API_SERVICE_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+  setServiceMetadataHeaders(res);
   next();
 }
