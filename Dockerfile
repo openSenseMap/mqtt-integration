@@ -15,7 +15,11 @@ RUN npm run build
 
 FROM base AS runner
 WORKDIR /app
+ARG GIT_REVISION=unknown
 ENV NODE_ENV=production
+ENV GIT_REVISION=${GIT_REVISION}
+
+LABEL org.opencontainers.image.revision=${GIT_REVISION}
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
